@@ -1,6 +1,13 @@
 services:
+  db:
+    build: db
+    networks:
+      - private_network
   backend:
     build: server
+    networks:
+      - private_network
+      - frontend_network
     ports:
       - "8000:5000"
     depends_on:
@@ -9,5 +16,14 @@ services:
     build: website
     ports:
       - "3000:3000"
-  db:
-    build: db
+    networks:
+      - frontend_network
+      - default
+networks:
+  private_network:
+    driver: bridge
+
+  frontend_network:
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+    driver: bridge
