@@ -1,21 +1,39 @@
 services:
   db:
     build: db
+    restart: always
     networks:
       - private_network
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    networks:
+      - private_network
+      - frontend_network
+    ports:
+      - 8081:8081
+    depends_on:
+      - db
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://db:27017/
+      ME_CONFIG_BASICAUTH: false
+  
   backend:
     build: server
     networks:
       - private_network
       - frontend_network
+    environment:
+      - MONGOCONNSTRING=mongodb://db:27017/
     ports:
-      - "8000:5000"
+      - 8000:5000
     depends_on:
       - db
   website:
     build: website
     ports:
-      - "3000:3000"
+      - 3000:3000
     networks:
       - frontend_network
       - default

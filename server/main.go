@@ -1,17 +1,24 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var MONGOCONNSTRING = os.Getenv("MONGOCONNSTRING")
 
 var teste struct {
 	valor string
 } = struct{ valor string }{valor: "um valor"}
-
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("got / request\n")
@@ -31,10 +38,18 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
+	ctx := context.Background()
 	http.HandleFunc("/", getRoot)
-
-	err := http.ListenAndServe(":5000", nil)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MONGOCONNSTRING))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	databases_list, err := client.ListDatabaseNames(ctx, bson.D{})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(databases_list)
+	err = http.ListenAndServe(":5000", nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
