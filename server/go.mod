@@ -1,8 +1,10 @@
-module go_on_docker
+module api
 
 go 1.24.1
 
 require (
+	api/middleware v0.0.0-00010101000000-000000000000
+	api/database v0.0.0-00010101000000-000000000000
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
@@ -15,3 +17,7 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 )
+
+replace api/middleware => ./middleware
+replace api/database => ./database
+

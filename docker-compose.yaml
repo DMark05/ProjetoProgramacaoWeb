@@ -30,13 +30,6 @@ services:
       - 8000:5000
     depends_on:
       - db
-  website:
-    build: website
-    ports:
-      - 3000:3000
-    networks:
-      - frontend_network
-      - default
 networks:
   private_network:
     driver: bridge
