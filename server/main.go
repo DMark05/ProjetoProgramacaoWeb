@@ -9,12 +9,30 @@ import (
 	"os"
 	"strings"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var MONGOCONNSTRING = os.Getenv("MONGOCONNSTRING")
+var (
+	MONGOCONNSTRING = os.Getenv("MONGOCONNSTRING")
+	MongoClient *mongo.Client
+)
+
+type MyCollection string
+
+const (
+	Users MyCollection = "users"
+)
+
+func getCollectionFromMongo(coll MyCollection) *mongo.Collection {
+	switch coll {
+	case Users:
+		return MongoClient.Database("ProjetoInternet").Collection(string(Users))
+	default:
+		log.Fatalln("Collection not implemented")
+		return nil
+	}
+}
 
 var teste struct {
 	valor string
@@ -40,15 +58,12 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 func main() {
 	ctx := context.Background()
 	http.HandleFunc("/", getRoot)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MONGOCONNSTRING))
+	http.HandleFunc("/login", login)
+	MongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(MONGOCONNSTRING))
 	if err != nil {
 		log.Fatalln(err)
 	}
-	databases_list, err := client.ListDatabaseNames(ctx, bson.D{})
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Println(databases_list)
+	_ = MongoClient
 	err = http.ListenAndServe(":5000", nil)
 	if err != nil {
 		log.Fatalln(err)

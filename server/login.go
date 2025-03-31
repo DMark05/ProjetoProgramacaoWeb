@@ -8,8 +8,8 @@ import (
 )
 
 type LoginForm struct {
-	Email string `json:"e-mail"`
-	Password string `json:"password"`
+	Email string `bson:"e-mail"`
+	Password string `bson:"password"`
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +34,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid data", http.StatusInternalServerError)
 	}
 
-	// TODO: Implementar o login com MongoDB
-
+	_ , err = getCollectionFromMongo(Users).InsertOne(r.Context(), login_form)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
