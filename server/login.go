@@ -14,12 +14,6 @@ type LoginForm struct {
 	Password string `bson:"password"`
 }
 
-/*
-	{
-		"e-mail": {"$eq": email},
-		"password": passwd
-	}
-*/
 func GetLogin(w http.ResponseWriter, r *http.Request) {
 	login_form := LoginForm{}
 	output, err := io.ReadAll(r.Body)
@@ -42,7 +36,7 @@ func GetLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostLogin(w http.ResponseWriter, r *http.Request) {
-	var login_form LoginForm = LoginForm{}
+	login_form := LoginForm{}
 	output, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
@@ -55,6 +49,9 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 	if domain != "iscte-iul.pt" {
 		http.Error(w, "Invalid data", http.StatusInternalServerError)
 	}
-	// TODO: Implementar o login com MongoDB
-
+	result, err:= database.GetCollectionFromMongo(database.Users).InsertOne(r.Context(), login_form)
+	// Print debug
+	if err != nil {
+		fmt.Printf("Inserted document with _id %v\n", result.InsertedID)
+	}
 }
