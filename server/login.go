@@ -4,54 +4,33 @@ import (
 	"api/database"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"strings"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type LoginForm struct {
-	Email    string `bson:"e-mail"`
-	Password string `bson:"password"`
-}
-
-func GetLogin(w http.ResponseWriter, r *http.Request) {
-	login_form := LoginForm{}
-	output, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
-	}
-	err = json.Unmarshal(output, &login_form)
-	if err != nil {
-		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
-	}
-	singleResult := database.GetCollectionFromMongo(database.Users).FindOne(r.Context(), login_form)
-	login_form = LoginForm{}
-	err = singleResult.Decode(&login_form)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error decoding result from mongoDB: %v", err), http.StatusInternalServerError)
-	}
-	if login_form.Email == "" {
-		http.Error(w, "Wrong Credentials", http.StatusBadRequest)
-	}
+	Email    string `json:"Email" bson:"Email"`
+	Password string `json:"Password" bson:"Password"`
 }
 
 func PostLogin(w http.ResponseWriter, r *http.Request) {
-	login_form := LoginForm{}
-	output, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
-	}
-	err = json.Unmarshal(output, &login_form)
+	var loginForm LoginForm
+
+	err := json.NewDecoder(r.Body).Decode(&loginForm)
 	if err != nil {
 		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		return
 	}
-	domain := strings.Split(login_form.Email, "@")[1]
-	if domain != "iscte-iul.pt" {
-		http.Error(w, "Invalid data", http.StatusInternalServerError)
-	}
-	result, err:= database.GetCollectionFromMongo(database.Users).InsertOne(r.Context(), login_form)
-	// Print debug
+	
+	filter := bson.M{"Email": loginForm.Email, "Password": loginForm.Password}
+	singleResult := database.GetCollectionFromMongo(database.Users).FindOne(r.Context(), filter)
+
+	var foundUser LoginForm
+	err = singleResult.Decode(&foundUser)
 	if err != nil {
-		fmt.Printf("Inserted document with _id %v\n", result.InsertedID)
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
 	}
+
+	fmt.Fprintf(w, "Login successful. Welcome %s", foundUser.Email)
 }

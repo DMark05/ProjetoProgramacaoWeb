@@ -13,8 +13,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	router := http.NewServeMux()
-	router.HandleFunc("GET /login", GetLogin)   // localhost:5000/login GET
-	router.HandleFunc("POST /login", PostLogin) // localhost:5000/login POST
+	router.HandleFunc("/login", PostLogin) // localhost:8000/login POST
 	server := http.Server{
 		Handler: middleware.RedirectDefaultWrongCallsMiddleware(router),
 		Addr:    ":5000",
