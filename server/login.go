@@ -26,9 +26,15 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 	singleResult := database.GetCollectionFromMongo(database.Users).FindOne(r.Context(), filter)
 
 	var foundUser LoginForm
+
 	err = singleResult.Decode(&foundUser)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		_, insertErr := database.GetCollectionFromMongo(database.Users).InsertOne(r.Context(), loginForm)
+		if insertErr != nil {
+			http.Error(w, "Sign in failed", http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "User not found, sign in done!")
 		return
 	}
 
