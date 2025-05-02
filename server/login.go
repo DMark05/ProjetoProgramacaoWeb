@@ -34,9 +34,17 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Sign in failed", http.StatusInternalServerError)
 			return
 		}
-		fmt.Fprintf(w, "User not found, sign in done!")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated) // 201
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "User not found, sign in done!",
+		})
 		return
 	}
 
-	fmt.Fprintf(w, "Login successful. Welcome %s", foundUser.Email)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // 200
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": fmt.Sprintf("Login successful. Welcome %s", foundUser.Email),
+	})
 }

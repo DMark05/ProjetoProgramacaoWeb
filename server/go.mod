@@ -3,12 +3,16 @@ module api
 go 1.24.1
 
 require (
-	api/middleware v0.0.0-00010101000000-000000000000
 	api/database v0.0.0-00010101000000-000000000000
+	api/middleware v0.0.0-00010101000000-000000000000
 	go.mongodb.org/mongo-driver v1.17.3
+)
+
+require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
+	github.com/rs/cors v1.11.1 
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
@@ -19,5 +23,5 @@ require (
 )
 
 replace api/middleware => ./middleware
-replace api/database => ./database
 
+replace api/database => ./database

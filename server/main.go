@@ -5,6 +5,8 @@ import (
 	"api/middleware"
 	"log"
 	"net/http"
+
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -12,10 +14,20 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	router := http.NewServeMux()
 	router.HandleFunc("/login", PostLogin) // localhost:8000/login POST
+
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	})
+	finalHandler := corsHandler.Handler(middleware.RedirectDefaultWrongCallsMiddleware(router))
+
 	server := http.Server{
-		Handler: middleware.RedirectDefaultWrongCallsMiddleware(router),
+		Handler: finalHandler,
 		Addr:    ":5000",
 	}
 	if err != server.ListenAndServe() {
