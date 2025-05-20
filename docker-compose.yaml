@@ -24,6 +24,8 @@ services:
     networks:
       - private_network
       - frontend_network
+    env_file:
+      - .env
     environment:
       - MONGOCONNSTRING=mongodb://db:27017/
     ports:

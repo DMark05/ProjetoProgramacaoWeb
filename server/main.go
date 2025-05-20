@@ -19,7 +19,6 @@ func main() {
 	router.HandleFunc("/login", PostLogin) // localhost:8000/login POST
 	router.HandleFunc("/signup", PostSignUp)
 
-	
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
