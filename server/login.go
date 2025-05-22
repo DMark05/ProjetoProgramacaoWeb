@@ -30,12 +30,6 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 	var foundUser LoginForm
 	err = singleResult.Decode(&foundUser)
 	if err != nil {
-		foundUser = loginForm
-		_, err = database.GetCollectionFromMongo(database.Users).InsertOne(r.Context(), foundUser)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Sign in failed: %s", err.Error()), http.StatusInternalServerError)
-			return
-		}
 		http.Error(w, "User not found", http.StatusForbidden)
 		return
 	} else {
