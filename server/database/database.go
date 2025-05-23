@@ -18,12 +18,15 @@ var (
 type Collections string
 
 const ( //Collections
-	Users Collections = "users"
+	Users  Collections = "users"
+	Events Collections = "events"
 )
 
 func GetCollectionFromMongo(collection Collections) *mongo.Collection {
 	switch collection {
 	case Users:
+		return MongoClient.Database("ProjetoInternet").Collection(string(collection))
+	case Events:
 		return MongoClient.Database("ProjetoInternet").Collection(string(collection))
 	default:
 		log.Fatalf("no collection named %s\n", string(collection))
