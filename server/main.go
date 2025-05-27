@@ -16,8 +16,10 @@ func main() {
 	}
 
 	router := http.NewServeMux()
-	router.HandleFunc("/login", PostLogin) // localhost:8000/login POST
+	router.HandleFunc("/login", PostLogin)
 	router.HandleFunc("/signup", PostSignUp)
+	router.HandleFunc("/newevent", PostcreateEvent)
+	router.HandleFunc("/events", GetEvent)
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
