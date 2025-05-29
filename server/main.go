@@ -20,6 +20,7 @@ func main() {
 	router.HandleFunc("/signup", PostSignUp)
 	router.HandleFunc("/newevent", PostcreateEvent)
 	router.HandleFunc("/events", GetEvent)
+	router.HandleFunc("/newuc", PostCreateUC)
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
