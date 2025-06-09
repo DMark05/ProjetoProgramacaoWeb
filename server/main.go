@@ -18,8 +18,10 @@ func main() {
 	router := http.NewServeMux()
 	router.HandleFunc("/login", PostLogin)
 	router.HandleFunc("/signup", PostSignUp)
-	router.HandleFunc("/newevent", PostcreateEvent)
-	router.HandleFunc("/events", GetEvent)
+	router.Handle("/events", middleware.ValidateJWT(http.HandlerFunc(GetEvent), verifyUserToken))
+	router.Handle("/newevent", middleware.ValidateJWT(http.HandlerFunc(PostcreateEvent), verifyUserToken))
+	router.Handle("/events/{eventId}", middleware.ValidateJWT(http.HandlerFunc(getEventImage), verifyUserToken))
+	// router.HandleFunc("/events", GetEvent)
 
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
