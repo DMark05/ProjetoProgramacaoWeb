@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,9 @@ func getImage(imagePath string) (*os.File, error) {
 	fileParts := strings.Split(imagePath, ".")
 	if len(fileParts) < 2 {
 		return nil, fmt.Errorf("image name didn't have an extension")
+	}
+	if _, err := os.Stat(imagePath); errors.Is(err, os.ErrNotExist) {
+
 	}
 	file, err := os.Open(imagePath)
 	if err != nil {
