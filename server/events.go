@@ -9,16 +9,16 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	// "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type EventStruct struct {
-	Name	string `json:"Name" bson:"Name"`
-	Date	time.Time `json:"Date" bson:"Date"`
-	Description string `json:"Description" bson:"Description"`
-	Organizer string `json:"Organizer" bson:"Organizer"`
-	Tags	[]string `json:"Tags" bson:"Tags"`
-	Image	string `json:"Image" bson:"Image"`
+	Name        string    `json:"Name" bson:"Name"`
+	Date        time.Time `json:"Date" bson:"Date"`
+	Description string    `json:"Description" bson:"Description"`
+	Organizer   string    `json:"Organizer" bson:"Organizer"`
+	Tags        []string  `json:"Tags" bson:"Tags"`
+	Image       string    `json:"Image" bson:"Image"`
 }
 
 func PostcreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -30,18 +30,18 @@ func PostcreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := bson.M{
-					"Name": newEvent.Name,
-					"Date": newEvent.Date,
-					"Description": newEvent.Description,
-					"Organizer": newEvent.Organizer,
-					"Tags": newEvent.Tags,
-					"Image": newEvent.Image}
+		"Name":        newEvent.Name,
+		"Date":        newEvent.Date,
+		"Description": newEvent.Description,
+		"Organizer":   newEvent.Organizer,
+		"Tags":        newEvent.Tags,
+		"Image":       newEvent.Image}
 
 	_, insertErr := database.GetCollectionFromMongo(database.Events).InsertOne(r.Context(), filter)
 	if insertErr != nil {
-			http.Error(w, "Creating event failed", http.StatusInternalServerError)
-			return
-		}
+		http.Error(w, "Creating event failed", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
@@ -56,7 +56,7 @@ func GetEvent(w http.ResponseWriter, r *http.Request) {
 	// Default values
 	page := 1
 	limit := 10
-	
+
 	var err error
 
 	if pageParam != "" {
@@ -75,13 +75,36 @@ func GetEvent(w http.ResponseWriter, r *http.Request) {
 
 	skip := (page - 1) * limit
 
-	cursor, err := database.GetCollectionFromMongo(database.Events).Find(
-		r.Context(),
-		bson.M{},
-		options.Find().
-			SetSkip(int64(skip)).
-			SetLimit(int64(limit)),
-	)
+	cursor, err := database.GetCollectionFromMongo(database.Events).Aggregate(r.Context(), bson.A{
+		bson.M{
+			"$addFields": bson.M{
+				"avgRating": bson.M{
+					"$ifNull": bson.A{
+						bson.M{
+							"$avg": "$Reviews.rating",
+						},
+						0,
+					},
+				},
+			},
+		},
+		bson.M{
+			"$project": bson.M{
+				"Reviews": 0,
+			},
+		},
+		bson.M{"$skip": skip},
+		bson.M{"$limit": limit},
+	})
+	/*
+		database.GetCollectionFromMongo(database.Events).Find(
+			r.Context(),
+			bson.M{},
+			options.Find().
+				SetSkip(int64(skip)).
+				SetLimit(int64(limit)),
+		)
+	*/
 	if err != nil {
 		http.Error(w, "Error geting events", http.StatusInternalServerError)
 		return
