@@ -9,9 +9,14 @@ import (
 )
 
 var secretKey = []byte(os.Getenv("secretKey"))
-var secretFunc = func(t *jwt.Token) (interface{}, error) { return secretKey, nil }
+var secretFunc = func(t *jwt.Token) (any, error) { return secretKey, nil }
 
-func createUserToken(user *LoginForm) (string, error) {
+type UserCredsForm struct {
+	Email    string `json:"Email" bson:"Email"`
+	Password string `json:"Password" bson:"Password"`
+}
+
+func createUserToken(user *UserCredsForm) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"email":    user.Email,
