@@ -32,7 +32,7 @@ func createUserToken(user *UserCredsForm) (string, error) {
 }
 
 func verifyUserToken(tokenString *string) error {
-	token, err := jwt.Parse(*tokenString, secretFunc, nil)
+	token, err := jwt.Parse(*tokenString, secretFunc)
 	if err != nil {
 		return err
 	}

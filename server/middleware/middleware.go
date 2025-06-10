@@ -16,7 +16,7 @@ func RedirectDefaultWrongCallsMiddleware(next http.Handler) http.Handler {
 
 func ValidateJWT(next http.Handler, validateFunc func(*string) error) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authToken := r.Header["Authorization"][0]
+		authToken := r.Header.Get("Authorization")
 		if err := validateFunc(&authToken); err != nil { //if fails
 			http.Error(w, "No valid token", http.StatusUnauthorized)
 		} else { //if succeeds
