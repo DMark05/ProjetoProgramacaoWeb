@@ -20,7 +20,6 @@ type EventStruct struct {
 	Description string             `json:"Description" bson:"Description"`
 	Organizer   string             `json:"Organizer" bson:"Organizer"`
 	Tags        []string           `json:"Tags" bson:"Tags"`
-	Image       string             `json:"Image" bson:"Image"`
 	Reviews     []ReviewStruct     `json:"Review,omitempty" bson:"Reviews"`
 	AvgRating   *float64           `json:"AvgRating,omitempty" bson:"avgRating"`
 }
@@ -44,8 +43,7 @@ func PostEvent(w http.ResponseWriter, r *http.Request) {
 		"Date":        newEvent.Date,
 		"Description": newEvent.Description,
 		"Organizer":   newEvent.Organizer,
-		"Tags":        newEvent.Tags,
-		"Image":       newEvent.Image}
+		"Tags":        newEvent.Tags}
 
 	_, insertErr := database.GetCollectionFromMongo(database.Events).InsertOne(r.Context(), filter)
 	if insertErr != nil {

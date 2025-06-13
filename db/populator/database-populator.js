@@ -56,7 +56,6 @@ if(await eventsCollection.countDocuments() == 0) {
             Description: faker.lorem.sentences(2),
             Organizer: faker.person.firstName(),
             Tags: tags,
-            Image: "example/path",
             Reviews: reviews
         })
     }
