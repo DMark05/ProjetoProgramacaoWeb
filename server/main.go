@@ -21,6 +21,8 @@ func main() {
 	router.Handle("GET /events", middleware.ValidateJWT(http.HandlerFunc(GetEvent), verifyUserToken))
 	router.Handle("POST /newevent", middleware.ValidateJWT(http.HandlerFunc(PostcreateEvent), verifyUserToken))
 	router.Handle("GET /events/{eventId}", middleware.ValidateJWT(http.HandlerFunc(getEventImage), verifyUserToken))
+	router.Handle("GET /events/{eventId}/reviews", middleware.ValidateJWT(http.HandlerFunc(getEventReviews), verifyUserToken))
+	router.Handle("PUT /events/{eventId}/reviews", middleware.ValidateJWT(http.HandlerFunc(PutEventReview), verifyUserToken))
 	// router.HandleFunc("/events", GetEvent)
 
 	corsHandler := cors.New(cors.Options{

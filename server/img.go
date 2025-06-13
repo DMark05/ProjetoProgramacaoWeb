@@ -14,21 +14,21 @@ func getImage(imagePath string) (*os.File, error) {
 	if len(fileParts) < 2 {
 		return nil, fmt.Errorf("image name didn't have an extension")
 	}
+	var file *os.File
+	var fileErr error
 	if _, err := os.Stat(imagePath); errors.Is(err, os.ErrNotExist) {
-
+		file, fileErr = os.Open("local/images/default.svg")
+	} else {
+		file, fileErr = os.Open(imagePath)
 	}
-	file, err := os.Open(imagePath)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
+	return file, fileErr
 }
 
 func getEventImage(w http.ResponseWriter, r *http.Request) {
 	imagePath := "local/images/"
 	image := r.PathValue("eventId")
 	if image == "" {
-		http.Error(w, "must send eventId in path: %", http.StatusBadRequest)
+		http.Error(w, "must send eventId in path", http.StatusBadRequest)
 		return
 	}
 	file, err := getImage(imagePath + image)

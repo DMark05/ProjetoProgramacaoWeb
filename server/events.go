@@ -4,21 +4,30 @@ import (
 	"api/database"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	// "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type EventStruct struct {
-	Name        string    `json:"Name" bson:"Name"`
-	Date        time.Time `json:"Date" bson:"Date"`
-	Description string    `json:"Description" bson:"Description"`
-	Organizer   string    `json:"Organizer" bson:"Organizer"`
-	Tags        []string  `json:"Tags" bson:"Tags"`
-	Image       string    `json:"Image" bson:"Image"`
+	Name        string         `json:"Name" bson:"Name"`
+	Date        time.Time      `json:"Date" bson:"Date"`
+	Description string         `json:"Description" bson:"Description"`
+	Organizer   string         `json:"Organizer" bson:"Organizer"`
+	Tags        []string       `json:"Tags" bson:"Tags"`
+	Image       string         `json:"Image" bson:"Image"`
+	Reviews     []ReviewStruct `json:"Reviews" bson:"Reviews"`
+}
+
+type ReviewStruct struct {
+	Rating      int       `json:"Rating" bson:"Rating"`
+	Comment     string    `json:"Comment" bson:"Comment"`
+	SubmittedOn time.Time `json:"SubmittedOn" bson:"SubmittedOn"`
 }
 
 func PostcreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -119,4 +128,67 @@ func GetEvent(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(events)
+}
+
+func getEventReviews(w http.ResponseWriter, r *http.Request) {
+	eventId := r.PathValue("eventId")
+	if eventId == "" {
+		http.Error(w, "No eventId sent", http.StatusBadRequest)
+		return
+	}
+	hexObjectId, err := primitive.ObjectIDFromHex(eventId)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't instantiate object id: %s", err), http.StatusInternalServerError)
+		return
+	}
+	_ = hexObjectId
+	var reviews []struct {
+		R []ReviewStruct `bson:"Reviews"`
+	}
+	cursor, err := database.GetCollectionFromMongo(database.Events).Aggregate(r.Context(), bson.A{})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't get event reviews: %s", err), http.StatusInternalServerError)
+		return
+	}
+	err = cursor.Decode(&reviews)
+	log.Println(reviews)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't decode reviews: %s", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reviews)
+}
+
+func PutEventReview(w http.ResponseWriter, r *http.Request) {
+	eventId := r.PathValue("eventId")
+	if eventId == "" {
+		http.Error(w, "No eventId sent", http.StatusBadRequest)
+		return
+	}
+	hexObjectId, _ := primitive.ObjectIDFromHex(eventId)
+	var review ReviewStruct
+	err := json.NewDecoder(r.Body).Decode(&review)
+	if err != nil {
+		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		return
+	}
+	_, err = database.GetCollectionFromMongo(database.Events).UpdateByID(r.Context(),
+		hexObjectId,
+		bson.M{
+			"$push": bson.M{
+				"Reviews": bson.M{
+					"Rating":      review.Rating,
+					"Comment":     review.Comment,
+					"SubmittedOn": review.SubmittedOn.Format("02-01-2006"),
+				},
+			},
+		})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to submit review: %s", err), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Review submitted",
+	})
 }
