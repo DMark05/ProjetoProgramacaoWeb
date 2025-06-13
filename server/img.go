@@ -31,6 +31,9 @@ func getEventImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "must send eventId in path", http.StatusBadRequest)
 		return
 	}
+	if _, err := os.Stat(imagePath + image); errors.Is(err, os.ErrNotExist) {
+		image = "default.svg"
+	}
 	file, err := getImage(imagePath + image)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Can't open the image file: %s", err), http.StatusInternalServerError)
