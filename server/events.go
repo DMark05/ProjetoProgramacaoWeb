@@ -4,7 +4,6 @@ import (
 	"api/database"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,13 +14,15 @@ import (
 )
 
 type EventStruct struct {
-	Name        string         `json:"Name" bson:"Name"`
-	Date        time.Time      `json:"Date" bson:"Date"`
-	Description string         `json:"Description" bson:"Description"`
-	Organizer   string         `json:"Organizer" bson:"Organizer"`
-	Tags        []string       `json:"Tags" bson:"Tags"`
-	Image       string         `json:"Image" bson:"Image"`
-	Reviews     []ReviewStruct `json:"Reviews" bson:"Reviews"`
+	Id          primitive.ObjectID `json:"EventId" bson:"_id"`
+	Name        string             `json:"Name" bson:"Name"`
+	Date        time.Time          `json:"Date" bson:"Date"`
+	Description string             `json:"Description" bson:"Description"`
+	Organizer   string             `json:"Organizer" bson:"Organizer"`
+	Tags        []string           `json:"Tags" bson:"Tags"`
+	Image       string             `json:"Image" bson:"Image"`
+	Reviews     []ReviewStruct     `json:"Review,omitempty" bson:"Reviews"`
+	AvgRating   *float64           `json:"AvgRating,omitempty" bson:"avgRating"`
 }
 
 type ReviewStruct struct {
@@ -90,7 +91,7 @@ func GetEvent(w http.ResponseWriter, r *http.Request) {
 				"avgRating": bson.M{
 					"$ifNull": bson.A{
 						bson.M{
-							"$avg": "$Reviews.rating",
+							"$avg": "$Reviews.Rating",
 						},
 						0,
 					},
@@ -145,19 +146,23 @@ func getEventReviews(w http.ResponseWriter, r *http.Request) {
 	var reviews []struct {
 		R []ReviewStruct `bson:"Reviews"`
 	}
-	cursor, err := database.GetCollectionFromMongo(database.Events).Aggregate(r.Context(), bson.A{})
+	cursor, err := database.GetCollectionFromMongo(database.Events).Aggregate(r.Context(), bson.A{
+		bson.M{
+			"$match": bson.M{
+				"_id": hexObjectId,
+			},
+		},
+	})
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Couldn't get event reviews: %s", err), http.StatusInternalServerError)
 		return
 	}
-	err = cursor.Decode(&reviews)
-	log.Println(reviews)
-	if err != nil {
+	if err = cursor.All(r.Context(), &reviews); err != nil {
 		http.Error(w, fmt.Sprintf("Couldn't decode reviews: %s", err), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(reviews)
+	json.NewEncoder(w).Encode(reviews[0].R)
 }
 
 func PutEventReview(w http.ResponseWriter, r *http.Request) {
