@@ -39,7 +39,8 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // 200
+
+	// w.WriteHeader(http.StatusOK) // 200
 	json.NewEncoder(w).Encode(map[string]string{
 		"message":       message,
 		"authenticated": strconv.FormatBool(true),
