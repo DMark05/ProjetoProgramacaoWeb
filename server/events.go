@@ -31,7 +31,7 @@ type ReviewStruct struct {
 	SubmittedOn time.Time `json:"SubmittedOn" bson:"SubmittedOn"`
 }
 
-func PostcreateEvent(w http.ResponseWriter, r *http.Request) {
+func PostEvent(w http.ResponseWriter, r *http.Request) {
 	var newEvent EventStruct
 	err := json.NewDecoder(r.Body).Decode(&newEvent)
 	if err != nil {
@@ -59,7 +59,7 @@ func PostcreateEvent(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func GetEvent(w http.ResponseWriter, r *http.Request) {
+func GetEvents(w http.ResponseWriter, r *http.Request) {
 	pageParam := r.URL.Query().Get("page")
 	limitParam := r.URL.Query().Get("limit")
 
