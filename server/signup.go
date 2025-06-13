@@ -10,13 +10,8 @@ import (
 	"net/http"
 )
 
-type SignUpForm struct {
-	Email    string `json:"Email" bson:"Email"`
-	Password string `json:"Password" bson:"Password"`
-}
-
 func PostSignUp(w http.ResponseWriter, r *http.Request) {
-	var signUpForm SignUpForm
+	var signUpForm UserCredsForm
 
 	err := json.NewDecoder(r.Body).Decode(&signUpForm)
 	if err != nil {
@@ -27,7 +22,7 @@ func PostSignUp(w http.ResponseWriter, r *http.Request) {
 	filter := bson.M{"Email": signUpForm.Email, "Password": signUpForm.Password}
 	singleResult := database.GetCollectionFromMongo(database.Users).FindOne(r.Context(), filter)
 
-	var user SignUpForm
+	var user UserCredsForm
 
 	err = singleResult.Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {

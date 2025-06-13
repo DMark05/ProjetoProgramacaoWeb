@@ -9,14 +9,9 @@ import (
 	"strconv"
 )
 
-type LoginForm struct {
-	Email    string `json:"Email" bson:"Email"`
-	Password string `json:"Password" bson:"Password"`
-}
-
 func PostLogin(w http.ResponseWriter, r *http.Request) {
 	// Decode login
-	var loginForm LoginForm
+	var loginForm UserCredsForm
 	err := json.NewDecoder(r.Body).Decode(&loginForm)
 	if err != nil {
 		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
@@ -27,7 +22,7 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 	filter := bson.M{"Email": loginForm.Email, "Password": loginForm.Password}
 	singleResult := database.GetCollectionFromMongo(database.Users).FindOne(r.Context(), filter)
 	var message string
-	var foundUser LoginForm
+	var foundUser UserCredsForm
 	err = singleResult.Decode(&foundUser)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusForbidden)
@@ -44,7 +39,8 @@ func PostLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // 200
+
+	// w.WriteHeader(http.StatusOK) // 200
 	json.NewEncoder(w).Encode(map[string]string{
 		"message":       message,
 		"authenticated": strconv.FormatBool(true),
