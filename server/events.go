@@ -185,7 +185,7 @@ func PutEventReview(w http.ResponseWriter, r *http.Request) {
 				"Reviews": bson.M{
 					"Rating":      review.Rating,
 					"Comment":     review.Comment,
-					"SubmittedOn": review.SubmittedOn.Format("02-01-2006"),
+					"SubmittedOn": review.SubmittedOn,
 				},
 			},
 		})
