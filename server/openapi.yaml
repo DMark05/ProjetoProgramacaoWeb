@@ -1,0 +1,277 @@
+openapi: 3.0.4
+info:
+  title: ISCTE Event Manager API
+  version: 1.0.0
+  description: Api para receber e enviar informação relacionadas com os eventos do ISCTE
+
+servers:
+  - url: http://localhost:8000
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserCredsForm:
+      type: object
+      properties:
+        Email:
+          type: string
+          format: email
+        Password:
+          type: string
+          format: password
+      required:
+        - Email
+        - Password
+
+    Review:
+      type: object
+      properties:
+        Rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        Comment:
+          type: string
+        SubmittedOn:
+          type: string
+          format: date-time
+      required:
+        - Rating
+        - Comment
+
+    Event:
+      type: object
+      properties:
+        EventId:
+          type: string
+        Name:
+          type: string
+        Date:
+          type: string
+          format: date-time
+        Description:
+          type: string
+        Organizer:
+          type: string
+        Tags:
+          type: array
+          items:
+            type: string
+        AvgRating:
+          type: number
+          format: float
+      required:
+        - Name
+        - Date
+        - Description
+        - Organizer
+        - Tags
+
+    EventInput:
+      type: object
+      properties:
+        Name:
+          type: string
+        Date:
+          type: string
+          format: date-time
+        Description:
+          type: string
+        Organizer:
+          type: string
+        Tags:
+          type: array
+          items:
+            type: string
+      required:
+        - Name
+        - Date
+        - Description
+        - Organizer
+        - Tags
+
+paths:
+  /login:
+    post:
+      summary: Login do user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredsForm'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  authenticated:
+                    type: boolean
+                  token:
+                    type: string
+        '400':
+          description: Invalid JSON format
+        '403':
+          description: User not found
+
+  /signup:
+    post:
+      summary: Criar um user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredsForm'
+      responses:
+        '201':
+          description: Sign up successful
+        '400':
+          description: Invalid JSON format
+        '409':
+          description: Email in use
+        '500':
+          description: Sign up failed | Database error
+
+
+  /events:
+    get:
+      summary: Listar eventos
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de eventos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '401':
+          description: No valid token
+        '500':
+          description: Error geting events | Error processing events
+
+  /newevent:
+    post:
+      summary: Criar novo evento
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+      responses:
+        '201':
+          description: Event created
+        '400':
+          description: Invalid JSON format
+        '401':
+          description: No valid token
+        '500':
+          description: Creating event failed
+
+  /events/{eventId}/image:
+    get:
+      summary: Enviar imagem associada ao evento
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Imagem do evento ou imagem default
+          content:
+            image/png: {}
+            image/jpeg: {}
+            image/svg+xml: {}
+        '400':
+          description: must send eventId in path
+        '401':
+          description: No valid token
+        '500':
+          description: Can't open the image file | Failed to write image into response
+
+  /events/{eventId}/reviews:
+    get:
+      summary: Listar reviews do evento
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+        '400': 
+          description: No eventId sent
+        '401':
+          description: No valid token
+        '500':
+          description: Couldn't instantiate object id | Couldn't get event reviews | Couldn't decode reviews
+
+    put:
+      summary: Submeter review do evento
+      parameters:
+        - in: path
+          name: eventId
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+      responses:
+        '200':
+          description: Review submitted
+        '400': 
+          description: No eventId sent | Invalid JSON format
+        '401':
+          description: No valid token
+        '500':
+          description: failed to submit review
+
+security:
+  - BearerAuth: []
