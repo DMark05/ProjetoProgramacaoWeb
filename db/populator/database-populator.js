@@ -43,7 +43,7 @@ if(await eventsCollection.countDocuments() == 0) {
             tags.push(faker.commerce.productAdjective())
         }
         const reviews = []
-        for(let j = 0; j < 5; j++) {
+        for(let j = 0; j < 10; j++) {
             reviews.push({
                 Rating: faker.number.int({min: 1, max: 5}),
                 Comment: faker.lorem.sentences(2),
